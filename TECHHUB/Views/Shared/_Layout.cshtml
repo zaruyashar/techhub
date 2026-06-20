@@ -56,7 +56,7 @@
 
             <div class="sidenav-heading">IT administration</div>
             <a class="sidenav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "HardwareInventory" ? "active" : "")" asp-controller="HardwareInventory" asp-action="Index">
-                <i class="fas fa-server"></i><span>Hardware inventories</span>
+                <i class="fas fa-server"></i><span>Hardware inventory</span>
             </a>
             <a class="sidenav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "SoftwareLicense" ? "active" : "")" asp-controller="SoftwareLicense" asp-action="Index">
                 <i class="fas fa-key"></i><span>Software licenses</span>
