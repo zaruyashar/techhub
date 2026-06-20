@@ -4,73 +4,103 @@
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-    <meta name="description" content="" />
-    <meta name="author" content="" />
-    <title>IT Asset Management & HelpDesk</title>
+    <link rel="icon" type="image/png" href="~/favicon.png" />
+    <title>@ViewData["Title"] - IT Asset Management & HelpDesk</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/simple-datatables@7.1.2/dist/style.min.css" rel="stylesheet" />
-    <link href="~/startbootstrap-sb-admin-gh-pages/startbootstrap-sb-admin-gh-pages/css/styles.css" rel="stylesheet" />
+    <link href="~/techhub-template/assets/css/theme.css" rel="stylesheet" />
     <link href="~/css/additionaldesigncomponents.css" rel="stylesheet" />
-    <script src="https://use.fontawesome.com/releases/v6.3.0/js/all.js" crossorigin="anonymous"></script>
 </head>
+<body class="app-shell">
 
+    <nav class="app-topnav">
+        <button class="sidenav-toggle" id="sidenavToggle" type="button" aria-label="Toggle sidebar">
+            <i class="fas fa-bars"></i>
+        </button>
 
-<body class="sb-nav-fixed">
+        <a class="app-brand" asp-controller="Default" asp-action="Index">
+            <span class="brand-mark"><i class="fab fa-hive"></i></span>
+            <span>TECHHUB</span>
+        </a>
 
-    <nav class="sb-topnav navbar navbar-expand navbar-dark bg-dark">
-        <a class="navbar-brand ps-3" asp-controller="Default" asp-action="Index">IT Dashboard</a>
-
-        <button class="btn btn-link btn-sm order-1 order-lg-0 me-4 me-lg-0" id="sidebarToggle" href="#"><i class="fas fa-bars"></i></button>
-
-        <form class="d-none d-md-inline-block form-inline ms-auto me-0 me-md-3 my-2 my-md-0" method="get" action="/Search">
-            <div class="input-group">
-                <input class="form-control" type="text" name="q" placeholder="Search for..." />
-                <button class="btn btn-primary" type="submit"><i class="fas fa-search"></i></button>
+        <div class="topnav-actions">
+            <div class="dropdown">
+                <a class="topnav-profile" href="#" role="button" data-bs-toggle="dropdown">
+                    <span class="avatar">IT</span>
+                    <span class="d-none d-lg-block">
+                        <span class="profile-name d-block">System Admin</span>
+                        <span class="profile-role d-block">Legend</span>
+                    </span>
+                    <i class="fas fa-chevron-down d-none d-lg-inline" style="font-size: 0.7rem; color: var(--slate-400);"></i>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark-soft">
+                    <li><a class="dropdown-item" href="#"><i class="fas fa-user me-2"></i>My profile</a></li>
+                    <li><a class="dropdown-item" href="#"><i class="fas fa-gear me-2"></i>Settings</a></li>
+                    <li><hr class="dropdown-divider" /></li>
+                    <li><a class="dropdown-item" href="#"><i class="fas fa-right-from-bracket me-2"></i>Sign out</a></li>
+                </ul>
             </div>
-        </form>
+        </div>
     </nav>
 
-    <div id="layoutSidenav">
-        <div id="layoutSidenav_nav">
-            <nav class="sb-sidenav accordion sb-sidenav-dark" id="sidenavAccordion">
-                <div class="sb-sidenav-menu">
-                    <div class="nav">
-                        <a class="nav-link" asp-controller="HardwareInventory" asp-action="Index">
-                            <div class="sb-nav-link-icon"><i class="fas fa-desktop"></i></div>
-                            Hardware Inventory
-                        </a>
-                        <a class="nav-link" asp-controller="SoftwareLicense" asp-action="Index">
-                            <div class="sb-nav-link-icon"><i class="fas fa-award"></i></div>
-                            Software Licences
-                        </a>
-                        <a class="nav-link" asp-controller="SupportTicket" asp-action="Index">
-                            <div class="sb-nav-link-icon"><i class="fas fa-ticket-alt"></i></div>
-                            Support Tickets
-                        </a>
-                    </div>
-                </div>
-            </nav>
+    <nav class="app-sidenav">
+        <div class="sidenav-scroll">
+
+            <div class="sidenav-heading">Overview</div>
+            <a class="sidenav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Default" ? "active" : "")" asp-controller="Default" asp-action="Index">
+                <i class="fas fa-gauge-high"></i><span>Dashboard</span>
+            </a>
+
+            <div class="sidenav-heading">IT administration</div>
+            <a class="sidenav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "HardwareInventory" ? "active" : "")" asp-controller="HardwareInventory" asp-action="Index">
+                <i class="fas fa-server"></i><span>Hardware inventories</span>
+            </a>
+            <a class="sidenav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "SoftwareLicense" ? "active" : "")" asp-controller="SoftwareLicense" asp-action="Index">
+                <i class="fas fa-key"></i><span>Software licenses</span>
+            </a>
+            <a class="sidenav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "SupportTicket" ? "active" : "")" asp-controller="SupportTicket" asp-action="Index">
+                <i class="fas fa-headset"></i><span>Support tickets</span>
+            </a>
+
+            <div class="sidenav-heading">Account</div>
+            <a class="sidenav-link" href="#">
+                <i class="fas fa-gear"></i><span>Settings</span>
+            </a>
         </div>
 
-        <div id="layoutSidenav_content">
-            <main class="bg-light min-vh-100 p-4">
-                <div class="container-fluid">
-                    @RenderBody()
-                </div>
-            </main>
-
-            <footer class="py-4 bg-light mt-auto">
-                <div class="container-fluid px-4">
-                    <div class="d-flex align-items-center justify-content-between small">
-                        <div class="text-muted">@DateTime.Now.Year &copy; zaruyashar</div>
-                    </div>
-                </div>
-            </footer>
+        <div class="sidenav-status">
+            <span class="dot"></span>
+            <span class="label">All systems operational</span>
         </div>
+    </nav>
 
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
-        <script src="~/startbootstrap-sb-admin-gh-pages/startbootstrap-sb-admin-gh-pages/js/scripts.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js" crossorigin="anonymous"></script>
-        <script src="https://cdn.jsdelivr.net/npm/simple-datatables@7.1.2/dist/umd/simple-datatables.min.js" crossorigin="anonymous"></script>
-        
-    </body>
+
+
+    <main class="app-content">
+        @RenderBody()
+    </main>
+
+
+
+    <footer class="app-footer">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <span>&copy; @DateTime.Now.Year zaruyashar</span>
+            <span>SoftITo Backend Project #5</span>
+        </div>
+    </footer>
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/simple-datatables@7.1.2/dist/umd/simple-datatables.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js" crossorigin="anonymous"></script>
+
+    <script src="~/techhub-template/assets/js/layout.js"></script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+
+</body>
 </html>

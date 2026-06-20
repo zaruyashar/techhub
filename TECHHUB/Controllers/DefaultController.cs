@@ -33,14 +33,13 @@ namespace TECHHUB.Controllers
                 openTickets = currentOpenTickets,
                 urgentCriticalTickets = currentUrgentTickets,
                 hardwareTracked = currentHardware,
-                licensesExpiring = currentLicenses,
-
+                licensesExpiring = currentLicenses
             });
         }
 
         public JsonResult TicketList()
         {
-            var data = context.SupportTickets.ToList();
+            var data = context.SupportTickets.Where(t => t.Status == "Open").ToList();
             return new JsonResult(data);
         }
 
@@ -67,7 +66,6 @@ namespace TECHHUB.Controllers
         {
             var data = context.SupportTickets.Where(m => m.Id == id).SingleOrDefault();
             return new JsonResult(data);
-
         }
 
 
@@ -80,12 +78,16 @@ namespace TECHHUB.Controllers
         }
 
 
+        [HttpPost]
         public JsonResult ChangeStatusToggle(int id)
         {
-            var data = context.SupportTickets.Where(m => m.Id == id).SingleOrDefault();
-            //context.SupportTickets.Remove(data);
-            context.SaveChanges();
-            return new JsonResult("Ticket Status Changed");
+            var data = context.SupportTickets.SingleOrDefault(m => m.Id == id);
+            if (data != null)
+            {
+                data.Status = data.Status == "Open" ? "Resolved" : "Open";
+                context.SaveChanges();
+            }
+            return new JsonResult(data?.Status);
         }
     }
 }

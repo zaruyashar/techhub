@@ -1,0 +1,212 @@
+﻿@{
+    ViewData["Title"] = "Support Tickets";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="d-flex align-items-start justify-content-between flex-wrap gap-2 mt-4 mb-4">
+    <div>
+        <h1 class="page-title">Support tickets</h1>
+        <p class="page-subtitle">Submit and track issues you've reported to IT.</p>
+    </div>
+    <button class="btn btn-primary" id="btnAdd">
+        <i class="fas fa-plus me-1"></i> New Ticket
+    </button>
+</div>
+
+
+<div class="card table-card mb-4">
+    <div class="table-responsive">
+        <table class="table" id="ticketsTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Issue title</th>
+                    <th>Description</th>
+                    <th>Urgency</th>
+                    <th>Reported date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="ticketTableBody">
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="modal fade" id="ticketModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="ticketForm">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="ticketModalLabel">New Ticket</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="TicketId" value="0" />
+                    <div class="mb-3">
+                        <label class="form-label">Issue title</label>
+                        <input type="text" class="form-control" id="IssueTitle" placeholder="e.g. VPN drops every few minutes" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control" id="Description" rows="3" placeholder="What's happening, and when did it start?" required></textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-6 mb-3">
+                            <label class="form-label">Urgency level</label>
+                            <select class="form-select" id="UrgencyLevel" required>
+                                <option value="Low">Low</option>
+                                <option value="Medium">Medium</option>
+                                <option value="High">High</option>
+                                <option value="Critical">Critical</option>
+                            </select>
+                        </div>
+                        <div class="col-sm-6 mb-3">
+                            <label class="form-label">Reported date</label>
+                            <input type="date" class="form-control" id="ReportedDate" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Status</label>
+                        <select class="form-select" id="Status" required>
+                            <option value="Open">Open</option>
+                            <option value="Resolved">Resolved</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveTicket()">Save Ticket</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts {
+    <script>
+        let dataTable;
+
+        $(document).ready(function () {
+            LoadData();
+
+            $('#btnAdd').click(function () {
+                $('#ticketModalLabel').text('New Ticket');
+                $('#TicketId').val(0);
+                $('#ticketForm')[0].reset();
+                $('#ticketModal').modal('show');
+            });
+
+            $(document).on('input search', '.datatable-input', function () {
+                if ($(this).val().trim() === '') {
+                    if (dataTable) dataTable.search('');
+                }
+            });
+        });
+
+        function LoadData() {
+            $.ajax({
+                url: '@Url.Action("TicketList", "SupportTicket")',
+                type: 'GET',
+                dataType: 'json',
+                success: function (data) {
+                    if (dataTable) {
+                        dataTable.destroy();
+                    }
+
+                    var tbody = $('#ticketTableBody');
+                    tbody.empty();
+
+                    $.each(data, function (index, item) {
+                        var reportedDate = new Date(item.reportedDate).toLocaleDateString('en-CA');
+
+                        var urgencyClass = "urgency-low";
+                        if (item.urgencyLevel === "High") urgencyClass = "urgency-high";
+                        else if (item.urgencyLevel === "Critical") urgencyClass = "urgency-critical";
+                        else if (item.urgencyLevel === "Medium") urgencyClass = "urgency-medium";
+
+                        var tr = `
+                            <tr>
+                                <td class="row-id">${item.id}</td>
+                                <td class="fw-medium">${item.issueTitle}</td>
+                                <td>${item.description}</td>
+                                <td><span class="status-pill ${urgencyClass}"><span class="dot"></span>${item.urgencyLevel}</span></td>
+                                <td>${reportedDate}</td>
+                                <td>
+                                    <button class="btn btn-icon btn-outline-primary btn-sm me-1" onclick="editTicket(${item.id})"><i class="fas fa-pen"></i></button>
+                                    <button class="btn btn-icon btn-outline-danger btn-sm" onclick="deleteTicket(${item.id})"><i class="fas fa-trash"></i></button>
+                                </td>
+                            </tr>`;
+                        tbody.append(tr);
+                    });
+
+                    dataTable = new simpleDatatables.DataTable("#ticketsTable", {
+                        searchable: true,
+                        perPage: 10,
+                        labels: {
+                            info: "Showing {start} to {end} of {rows} entries"
+                        }
+                    });
+                }
+            });
+        }
+
+        function saveTicket() {
+            var id = $('#TicketId').val();
+            var url = id == 0 ? '@Url.Action("AddSupportTicket", "SupportTicket")' : '@Url.Action("Update", "SupportTicket")';
+
+            var ticketData = {
+                Id: id,
+                IssueTitle: $('#IssueTitle').val(),
+                Description: $('#Description').val(),
+                UrgencyLevel: $('#UrgencyLevel').val(),
+                ReportedDate: $('#ReportedDate').val(),
+                Status: $('#Status').val()
+            };
+
+            $.ajax({
+                url: url,
+                type: 'POST',
+                data: ticketData,
+                success: function (response) {
+                    $('#ticketModal').modal('hide');
+                    LoadData();
+                }
+            });
+        }
+
+        function editTicket(id) {
+            $.ajax({
+                url: '@Url.Action("Edit", "SupportTicket")',
+                type: 'GET',
+                data: { id: id },
+                success: function (data) {
+                    $('#ticketModalLabel').text('Edit Ticket');
+                    $('#TicketId').val(data.id);
+                    $('#IssueTitle').val(data.issueTitle);
+                    $('#Description').val(data.description);
+                    $('#UrgencyLevel').val(data.urgencyLevel);
+                    $('#Status').val(data.status);
+
+                    if(data.reportedDate) $('#ReportedDate').val(data.reportedDate.split('T')[0]);
+
+                    $('#ticketModal').modal('show');
+                }
+            });
+        }
+
+        function deleteTicket(id) {
+            if (confirm("Remove ticket permanently?")) {
+                $.ajax({
+                    url: '@Url.Action("Delete", "SupportTicket")',
+                    type: 'GET',
+                    data: { id: id },
+                    success: function (response) {
+                        LoadData();
+                    }
+                });
+            }
+        }
+    </script>
+}

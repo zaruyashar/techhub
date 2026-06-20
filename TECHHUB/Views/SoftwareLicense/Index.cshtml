@@ -1,0 +1,211 @@
+﻿@{
+    ViewData["Title"] = "Software Licenses";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="d-flex align-items-start justify-content-between flex-wrap gap-2 mt-4 mb-4">
+    <div>
+        <h1 class="page-title">Software licenses</h1>
+        <p class="page-subtitle">Seats, keys, and renewal dates across vendors.</p>
+    </div>
+    <button class="btn btn-primary" id="btnAdd">
+        <i class="fas fa-plus me-1"></i> Add License
+    </button>
+</div>
+
+
+<div class="card table-card mb-4">
+    <div class="table-responsive">
+        <table class="table" id="licensesTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Software</th>
+                    <th>License key</th>
+                    <th>Total seats</th>
+                    <th>Renewal date</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="softwareTableBody">
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="modal fade" id="softwareModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="softwareForm">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="softwareModalLabel">Add License</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="LicenseId" value="0" />
+                    <div class="mb-3">
+                        <label class="form-label">Software name</label>
+                        <input type="text" class="form-control" id="SoftwareName" placeholder="e.g. Adobe Creative Cloud" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">License key</label>
+                        <input type="text" class="form-control text-mono" id="LicenseKey" required>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-6 mb-3">
+                            <label class="form-label">Total seats</label>
+                            <input type="number" class="form-control" id="TotalSeats" required>
+                        </div>
+                        <div class="col-sm-6 mb-3">
+                            <label class="form-label">Renewal date</label>
+                            <input type="date" class="form-control" id="RenewalDate" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveSoftware()">Save License</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts {
+    <script>
+        let dataTable;
+
+        $(document).ready(function () {
+            LoadData();
+
+            $('#btnAdd').click(function () {
+                $('#softwareModalLabel').text('Add License');
+                $('#LicenseId').val(0);
+                $('#softwareForm')[0].reset();
+                $('#softwareModal').modal('show');
+            });
+
+            $(document).on('input search', '.datatable-input', function () {
+                if ($(this).val().trim() === '') {
+                    if (dataTable) dataTable.search('');
+                }
+            });
+        });
+
+        function LoadData() {
+            $.ajax({
+                url: '@Url.Action("SoftwareLicenseList", "SoftwareLicense")',
+                type: 'GET',
+                dataType: 'json',
+                success: function (data) {
+                    if (dataTable) {
+                        dataTable.destroy();
+                    }
+
+                    var tbody = $('#softwareTableBody');
+                    tbody.empty();
+
+                    var today = new Date();
+
+                    $.each(data, function (index, item) {
+                        var expDate = new Date(item.renewalDate);
+                        var renewalDateFormatted = expDate.toLocaleDateString('en-CA');
+
+                        // Calculate Status based on Renewal Date
+                        var timeDiff = expDate.getTime() - today.getTime();
+                        var daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
+
+                        var statusHtml = "";
+                        if (daysDiff < 0) {
+                            statusHtml = '<span class="status-pill state-expired"><span class="dot"></span>Expired</span>';
+                        } else if (daysDiff <= 30) {
+                            statusHtml = '<span class="status-pill state-expiring"><span class="dot"></span>Expiring soon</span>';
+                        } else {
+                            statusHtml = '<span class="status-pill state-active"><span class="dot"></span>Active</span>';
+                        }
+
+                        var tr = `
+                            <tr>
+                                <td>${item.id}</td>
+                                <td>${item.softwareName}</td>
+                                <td class="row-key">${item.licenseKey}</td>
+                                <td>${item.totalSeats}</td>
+                                <td>${renewalDateFormatted}</td>
+                                <td>${statusHtml}</td>
+                                <td>
+                                    <button class="btn btn-icon btn-outline-primary btn-sm me-1" onclick="editSoftware(${item.id})"><i class="fas fa-pen"></i></button>
+                                    <button class="btn btn-icon btn-outline-danger btn-sm" onclick="deleteSoftware(${item.id})"><i class="fas fa-trash"></i></button>
+                                </td>
+                            </tr>`;
+                        tbody.append(tr);
+                    });
+
+                    dataTable = new simpleDatatables.DataTable("#licensesTable", {
+                        searchable: true,
+                        perPage: 10,
+                        labels: {
+                            info: "Showing {start} to {end} of {rows} entries"
+                        }
+                    });
+                }
+            });
+        }
+
+        function saveSoftware() {
+            var id = $('#LicenseId').val();
+            var url = id == 0 ? '@Url.Action("AddSoftwareLicense", "SoftwareLicense")' : '@Url.Action("Update", "SoftwareLicense")';
+
+            var softwareData = {
+                Id: id,
+                SoftwareName: $('#SoftwareName').val(),
+                LicenseKey: $('#LicenseKey').val(),
+                TotalSeats: $('#TotalSeats').val(),
+                RenewalDate: $('#RenewalDate').val()
+            };
+
+            $.ajax({
+                url: url,
+                type: 'POST',
+                data: softwareData,
+                success: function (response) {
+                    $('#softwareModal').modal('hide');
+                    LoadData();
+                }
+            });
+        }
+
+        function editSoftware(id) {
+            $.ajax({
+                url: '@Url.Action("Edit", "SoftwareLicense")',
+                type: 'GET',
+                data: { id: id },
+                success: function (data) {
+                    $('#softwareModalLabel').text('Edit License');
+                    $('#LicenseId').val(data.id);
+                    $('#SoftwareName').val(data.softwareName);
+                    $('#LicenseKey').val(data.licenseKey);
+                    $('#TotalSeats').val(data.totalSeats);
+
+                    if(data.renewalDate) $('#RenewalDate').val(data.renewalDate.split('T')[0]);
+
+                    $('#softwareModal').modal('show');
+                }
+            });
+        }
+
+        function deleteSoftware(id) {
+            if (confirm("Remove license permanently?")) {
+                $.ajax({
+                    url: '@Url.Action("Delete", "SoftwareLicense")',
+                    type: 'GET',
+                    data: { id: id },
+                    success: function (response) {
+                        LoadData();
+                    }
+                });
+            }
+        }
+    </script>
+}

@@ -1,73 +1,213 @@
 ﻿@{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Hardware Inventory";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
-<button class="btn btn-sm btn-primary m-2" id="btnAddEmployee">Add Hardware Inventory</button>
 
-<table class="table table-bordered">
-    <thead>
-        <tr class="text-center">
-            <th>Id</th>
-            <th>Device Type</th>
-            <th>Serial Number</th>
-            <th>Purchase Date</th>
-            <th>Warranty Expiration</th>
-        </tr>
-    </thead>
-    <tbody class="text-center" id="table_data"></tbody>
-</table>
+<div class="d-flex align-items-start justify-content-between flex-wrap gap-2 mt-4 mb-4">
+    <div>
+        <h1 class="page-title">Hardware inventory</h1>
+        <p class="page-subtitle">Company devices, serial numbers, and warranty status.</p>
+    </div>
+    <button class="btn btn-primary" id="btnAdd">
+        <i class="fas fa-plus me-1"></i> Add Device
+    </button>
+</div>
 
-<div class="modal fade" id="HardwareInventoryModal">
+
+<div class="card table-card mb-4">
+    <div class="table-responsive">
+        <table class="table" id="hardwareTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Device type</th>
+                    <th>Serial number</th>
+                    <th>Purchase date</th>
+                    <th>Warranty expiration</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="hardwareTableBody">
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="modal fade" id="hardwareModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header">
-                <h1 class="text-info modal-title" id="hardwareInventoryHeading">Add Hardware Inventory</h1>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form method="post">
-                    <div class="form-group" id="hardwareId">
-                        <label>Id</label>
-                        <input type="text" class="form-control" id="HardwareId" disabled="disabled" />
+            <form id="hardwareForm">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="hardwareModalLabel">Add Device</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="HardwareId" value="0" />
+                    <div class="mb-3">
+                        <label class="form-label">Device type</label>
+                        <input type="text" class="form-control" id="DeviceType" placeholder="e.g. MacBook Pro 14&quot;" required>
                     </div>
-
-                    <div class="form-group">
-                        <label>Device Type</label>
-                        <input type="text" placeholder="Enter the type of the device" class="form-control" id="DeviceType" autocomplete="off" />
+                    <div class="mb-3">
+                        <label class="form-label">Serial number</label>
+                        <input type="text" class="form-control text-mono" id="SerialNumber" required>
                     </div>
-
-                    <div class="form-group">
-                        <label>Serial Number</label>
-                        <input type="text" placeholder="Enter the serial number" class="form-control" id="SerialNumber" autocomplete="off" />
+                    <div class="row">
+                        <div class="col-sm-6 mb-3">
+                            <label class="form-label">Purchase date</label>
+                            <input type="date" class="form-control" id="PurchaseDate" required>
+                        </div>
+                        <div class="col-sm-6 mb-3">
+                            <label class="form-label">Warranty expiration</label>
+                            <input type="date" class="form-control" id="WarrantyExpiration" required>
+                        </div>
                     </div>
-
-                    <div class="form-group">
-                        <label>Purchase Date</label>
-                        <input type="text" placeholder="Enter the date the device was purchased" class="form-control" id="PurchaseDate" autocomplete="off" />
-                    </div>
-
-                    <div class="form-group">
-                        <label>Warranty Expiration</label>
-                        <input type="text" placeholder="Enter the date the warranty expires" class="form-control" id="Warranty Expiration" autocomplete="off" />
-                    </div>
-                </form>
-            </div>
-
-            <div class="modal-footer">
-                <button class="btn btn-primary" OnClick="AddHardwareInventory();" id="AddHardwareInventory">Save</button>
-
-                <button class="btn btn-warning" OnClick="UpdateHardwareInventory();" style="display:none" id="btnUpdate">Update</button>
-
-                <button class="btn btn-danger btn-default" data-dismiss="modal">Close</button>
-            </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveHardware()">Save Device</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
 
-<div>
-    <input type="hidden" id="urlHardwareInventoryData" value="@Url.Action("HardwareInventoryList", "HardwareInventory")" />
-</div>
 
-<script src="~/lib/jquery/dist/jquery.js"></script>
-<script src="~/lib/jquery/dist/jquery.min.js"></script>
-<script src="~/js/custom.js"></script>
+@section Scripts {
+    <script>
+        let dataTable;
+
+        $(document).ready(function () {
+            LoadData();
+
+            $('#btnAdd').click(function () {
+                $('#hardwareModalLabel').text('Add Device');
+                $('#HardwareId').val(0);
+                $('#hardwareForm')[0].reset();
+                $('#hardwareModal').modal('show');
+            });
+
+            $(document).on('input search', '.datatable-input', function () {
+                if ($(this).val().trim() === '') {
+                    if (dataTable) dataTable.search('');
+                }
+            });
+        });
+
+        function LoadData() {
+            $.ajax({
+                url: '@Url.Action("HardwareInventoryList", "HardwareInventory")',
+                type: 'GET',
+                dataType: 'json',
+                success: function (data) {
+                    if (dataTable) {
+                        dataTable.destroy();
+                    }
+
+                    var tbody = $('#hardwareTableBody');
+                    tbody.empty();
+
+                    var today = new Date();
+
+                    $.each(data, function (index, item) {
+                        var purchaseDate = new Date(item.purchaseDate).toLocaleDateString('en-CA');
+                        var expDate = new Date(item.warrantyExpiration);
+                        var warrantyDate = expDate.toLocaleDateString('en-CA');
+
+                        var timeDiff = expDate.getTime() - today.getTime();
+                        var daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
+
+                        var statusHtml = "";
+                        if (daysDiff < 0) {
+                            statusHtml = '<span class="status-pill state-expired"><span class="dot"></span>Expired</span>';
+                        } 
+                        else if (daysDiff <= 30) {
+                            statusHtml = '<span class="status-pill state-expiring"><span class="dot"></span>Expiring soon</span>';
+                        } 
+                        else {
+                            statusHtml = '<span class="status-pill state-active"><span class="dot"></span>Active</span>';
+                        }
+
+                        var tr = `
+                            <tr>
+                                <td>${item.id}</td>
+                                <td>${item.deviceType}</td>
+                                <td class="row-serial">${item.serialNumber}</td>
+                                <td>${purchaseDate}</td>
+                                <td>${warrantyDate}</td>
+                                <td>${statusHtml}</td>
+                                <td>
+                                    <button class="btn btn-icon btn-outline-primary btn-sm me-1" onclick="editHardware(${item.id})"><i class="fas fa-pen"></i></button>
+                                    <button class="btn btn-icon btn-outline-danger btn-sm" onclick="deleteHardware(${item.id})"><i class="fas fa-trash"></i></button>
+                                </td>
+                            </tr>`;
+                        tbody.append(tr);
+                    });
+
+                    dataTable = new simpleDatatables.DataTable("#hardwareTable", {
+                        searchable: true,
+                        perPage: 10,
+                        labels: {
+                            info: "Showing {start} to {end} of {rows} entries"
+                        }
+                    });
+                }
+            });
+        }
+
+        function saveHardware() {
+            var id = $('#HardwareId').val();
+            var url = id == 0 ? '@Url.Action("AddHardwareInventory", "HardwareInventory")' : '@Url.Action("Update", "HardwareInventory")';
+
+            var hardwareData = {
+                Id: id,
+                DeviceType: $('#DeviceType').val(),
+                SerialNumber: $('#SerialNumber').val(),
+                PurchaseDate: $('#PurchaseDate').val(),
+                WarrantyExpiration: $('#WarrantyExpiration').val()
+            };
+
+            $.ajax({
+                url: url,
+                type: 'POST',
+                data: hardwareData,
+                success: function (response) {
+                    $('#hardwareModal').modal('hide');
+                    LoadData();
+                }
+            });
+        }
+
+        function editHardware(id) {
+            $.ajax({
+                url: '@Url.Action("Edit", "HardwareInventory")',
+                type: 'GET',
+                data: { id: id },
+                success: function (data) {
+                    $('#hardwareModalLabel').text('Edit Device');
+                    $('#HardwareId').val(data.id);
+                    $('#DeviceType').val(data.deviceType);
+                    $('#SerialNumber').val(data.serialNumber);
+
+                    if(data.purchaseDate) $('#PurchaseDate').val(data.purchaseDate.split('T')[0]);
+                    if(data.warrantyExpiration) $('#WarrantyExpiration').val(data.warrantyExpiration.split('T')[0]);
+
+                    $('#hardwareModal').modal('show');
+                }
+            });
+        }
+
+        function deleteHardware(id) {
+            if (confirm("Remove device permanently?")) {
+                $.ajax({
+                    url: '@Url.Action("Delete", "HardwareInventory")',
+                    type: 'GET',
+                    data: { id: id },
+                    success: function (response) {
+                        LoadData();
+                    }
+                });
+            }
+        }
+    </script>
+}

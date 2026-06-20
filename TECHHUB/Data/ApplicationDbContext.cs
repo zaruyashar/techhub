@@ -14,5 +14,12 @@ namespace TECHHUB.Data
         public DbSet<HardwareInventory> HardwareInventories { get; set; }
         public DbSet<SoftwareLicense> SoftwareLicenses { get; set; }
         public DbSet<SupportTicket> SupportTickets { get; set; }
+
+        // I accidentally named my tables inconsistently (plural suffix-wise)
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<HardwareInventory>().ToTable("HardwareInventory");
+            modelBuilder.Entity<SoftwareLicense>().ToTable("SoftwareLicense");
+        }
     }
 }
