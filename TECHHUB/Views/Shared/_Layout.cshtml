@@ -1,4 +1,23 @@
-﻿<!DOCTYPE html>
+@inject Microsoft.AspNetCore.Identity.UserManager<TECHHUB.Models.ApplicationUser> UserManager
+@{
+    var currentUser = User.Identity?.IsAuthenticated == true ? await UserManager.GetUserAsync(User) : null;
+    var fullName = currentUser?.FullName ?? "System Admin";
+    var email = currentUser?.Email ?? "";
+    var initials = "IT";
+    if (currentUser != null && !string.IsNullOrWhiteSpace(currentUser.FullName))
+    {
+        var parts = currentUser.FullName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length > 1)
+        {
+            initials = (parts[0][0].ToString() + parts[1][0].ToString()).ToUpper();
+        }
+        else if (parts.Length > 0)
+        {
+            initials = parts[0][0].ToString().ToUpper();
+        }
+    }
+}
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -27,22 +46,29 @@
         </a>
 
         <div class="topnav-actions">
-            <div class="dropdown">
-                <a class="topnav-profile" href="#" role="button" data-bs-toggle="dropdown">
-                    <span class="avatar">IT</span>
-                    <span class="d-none d-lg-block">
-                        <span class="profile-name d-block">System Admin</span>
-                        <span class="profile-role d-block">Legend</span>
-                    </span>
-                    <i class="fas fa-chevron-down d-none d-lg-inline" style="font-size: 0.7rem; color: var(--slate-400);"></i>
-                </a>
-                <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark-soft">
-                    <li><a class="dropdown-item" href="#"><i class="fas fa-user me-2"></i>My profile</a></li>
-                    <li><a class="dropdown-item" href="#"><i class="fas fa-gear me-2"></i>Settings</a></li>
-                    <li><hr class="dropdown-divider" /></li>
-                    <li><a class="dropdown-item" href="#"><i class="fas fa-right-from-bracket me-2"></i>Sign out</a></li>
-                </ul>
-            </div>
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <div class="dropdown">
+                    <a class="topnav-profile" href="#" role="button" data-bs-toggle="dropdown">
+                        <span class="avatar">@initials</span>
+                        <span class="d-none d-lg-block">
+                            <span class="profile-name d-block">@fullName</span>
+                            <span class="profile-role d-block text-truncate" style="max-width: 140px; font-size: 0.75rem; opacity: 0.85;">@email</span>
+                        </span>
+                        <i class="fas fa-chevron-down d-none d-lg-inline" style="font-size: 0.7rem; color: var(--slate-400);"></i>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark-soft">
+                        <li><a class="dropdown-item" asp-controller="Account" asp-action="AccountDetails"><i class="fas fa-user me-2"></i>Account Details</a></li>
+                        <li><a class="dropdown-item" asp-controller="Account" asp-action="ManageChangePassword"><i class="fas fa-key me-2"></i>Change Password</a></li>
+                        <li><hr class="dropdown-divider" /></li>
+                        <li><a class="dropdown-item text-danger-hover" href="javascript:void(0);" onclick="submitLogoutForm();"><i class="fas fa-right-from-bracket me-2"></i>Sign out</a></li>
+                    </ul>
+                </div>
+            }
+            else
+            {
+                <a class="btn btn-sm btn-outline-light" asp-controller="Account" asp-action="Login">Sign In</a>
+            }
         </div>
     </nav>
 
@@ -66,8 +92,8 @@
             </a>
 
             <div class="sidenav-heading">Account</div>
-            <a class="sidenav-link" href="#">
-                <i class="fas fa-gear"></i><span>Settings</span>
+            <a class="sidenav-link text-danger-hover" href="javascript:void(0);" onclick="submitLogoutForm();">
+                <i class="fas fa-right-from-bracket"></i><span>Logout</span>
             </a>
         </div>
 
@@ -101,6 +127,18 @@
     <script src="~/techhub-template/assets/js/layout.js"></script>
 
     @await RenderSectionAsync("Scripts", required: false)
+
+    <form id="logoutForm" class="d-none" asp-controller="Account" asp-action="Logout" method="post">
+        @Html.AntiForgeryToken()
+    </form>
+
+    <script>
+        function submitLogoutForm() {
+            if (confirm("Are you sure you want to sign out?")) {
+                document.getElementById('logoutForm').submit();
+            }
+        }
+    </script>
 
 </body>
 </html>

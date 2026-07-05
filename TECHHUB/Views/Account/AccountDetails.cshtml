@@ -1,0 +1,96 @@
+@model TECHHUB.Controllers.AccountDetailsViewModel
+@{
+    ViewData["Title"] = "Account Details";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid px-4 mt-4">
+    <div>
+        <h1 class="page-title">Account Details</h1>
+        <p class="page-subtitle">Configure your administrator profile name and email address settings.</p>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-6 col-md-8">
+            <div class="card shadow-sm border-0 mb-4 p-4">
+                
+                <div class="alert alert-success d-none animate__animated animate__fadeIn" id="successMessage" role="alert"></div>
+                <div class="alert alert-danger d-none animate__animated animate__fadeIn" id="errorMessage" role="alert"></div>
+
+                <form id="accountDetailsForm">
+                    <div class="mb-3">
+                        <label class="form-label font-semibold">Full Name</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light text-muted border-end-0"><i class="far fa-user text-xs"></i></span>
+                            <input type="text" class="form-control border-start-0 ps-0" id="FullName" value="@Model.FullName" required>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="form-label font-semibold">Email Address / Username</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light text-muted border-end-0"><i class="far fa-envelope text-xs"></i></span>
+                            <input type="email" class="form-control border-start-0 ps-0" id="Email" value="@Model.Email" required autocomplete="email">
+                        </div>
+                    </div>
+
+                    <div class="d-flex align-items-center gap-2">
+                        <button type="button" class="btn btn-primary px-4" onclick="submitAccountDetails()">Save Profile Settings</button>
+                        <a href="@Url.Action("Index", "Default")" class="btn btn-outline-secondary px-4">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function submitAccountDetails() {
+            $('#successMessage').addClass('d-none').text('');
+            $('#errorMessage').addClass('d-none').html('');
+
+            var fullName = $('#FullName').val();
+            var email = $('#Email').val();
+
+            if (!fullName || !email) {
+                $('#errorMessage').text('Please fill in all fields.').removeClass('d-none');
+                return;
+            }
+
+            var profileData = {
+                FullName: fullName,
+                Email: email
+            };
+
+            $.ajax({
+                url: '@Url.Action("AccountDetails", "Account")',
+                type: 'POST',
+                data: profileData,
+                success: function (response) {
+                    if (response.success) {
+                        $('#successMessage').text(response.message).removeClass('d-none');
+                        // Update UI header details if the script has access (or reload after a delay)
+                        setTimeout(function() {
+                            window.location.reload();
+                        }, 1200);
+                    } else {
+                        var errHtml = '<ul>';
+                        if (response.errors) {
+                            $.each(response.errors, function (i, val) {
+                                errHtml += '<li>' + val + '</li>';
+                            });
+                        } else {
+                            errHtml += '<li>' + response.message + '</li>';
+                        }
+                        errHtml += '</ul>';
+                        $('#errorMessage').html(errHtml).removeClass('d-none');
+                    }
+                },
+                error: function () {
+                    $('#errorMessage').text('An error occurred while updating profile. Please try again.').removeClass('d-none');
+                }
+            });
+        }
+    </script>
+}

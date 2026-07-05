@@ -1,9 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using TECHHUB.Data;
 using TECHHUB.Models;
 
 namespace TECHHUB.Controllers
 {
+    [Authorize]
     public class SoftwareLicenseController : Controller
     {
         private readonly ApplicationDbContext context;

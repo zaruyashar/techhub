@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using TECHHUB.Data;
@@ -6,6 +7,7 @@ using TECHHUB.Models;
 
 namespace TECHHUB.Controllers
 {
+    [Authorize]
     public class DefaultController : Controller
     {
         private readonly ApplicationDbContext context;
