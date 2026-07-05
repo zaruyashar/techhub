@@ -6,14 +6,14 @@ Note: This application was developed as the 5th project for the SoftITo Backend 
 ---
 
 ## 🛠️ Technology Stack & Architecture
-Backend Framework: C# / ASP.NET Core MVC
-Architecture: N-Tier Architecture principles
-Database: MS SQL Server
-ORM: Entity Framework Core (Code-First Approach)
-Authentication: ASP.NET Core Identity (EF Core store) — cookie-based authentication, account lockout policy, token-based password reset
-Frontend: HTML5, CSS3, Bootstrap 5.3
-Interactivity: JavaScript, jQuery, AJAX (for dynamic DOM manipulation and seamless CRUD)
-Components: Simple-DataTables (for client-side sorting and pagination), Chart.js
+* Backend Framework: C# / ASP.NET Core MVC
+* Architecture: N-Tier Architecture principles
+* Database: MS SQL Server
+* ORM: Entity Framework Core (Code-First Approach)
+* Authentication: ASP.NET Core Identity (EF Core store) — cookie-based authentication, account lockout policy, token-based password reset
+* Frontend: HTML5, CSS3, Bootstrap 5.3
+* Interactivity: JavaScript, jQuery, AJAX (for dynamic DOM manipulation and seamless CRUD)
+* Components: Simple-DataTables (for client-side sorting and pagination), Chart.js
 
 ---
 
